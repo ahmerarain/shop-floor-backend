@@ -1,0 +1,8 @@
+Part Mark,Assembly Mark,Material,Thickness,Quantity,Length,Width,Height,Weight,Notes
+PART001,ASSY001,Steel,5mm,10,100,50,25,2.5,Valid row
+,ASSY002,Aluminum,3mm,5,80,40,20,1.2,Missing part mark
+PART003,,Steel,8mm,2,150,75,30,4.8,Missing assembly mark
+PART004,ASSY004,,2mm,20,60,30,15,0.3,Missing material
+PART005,ASSY005,Plastic,,8,120,60,25,3.2,Missing thickness
+PART006,ASSY006,Steel,6mm,12,90,45,22,1.8,Valid row
+PART007,ASSY007,Aluminum,4mm,15,70,35,18,1.4,Valid row

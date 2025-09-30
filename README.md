@@ -6,12 +6,13 @@ A robust Node.js/TypeScript backend service for processing CSV files with data v
 
 - **CSV Upload & Processing**: Upload CSV files with automatic validation
 - **Data Validation**: Mandatory field validation with detailed error reporting
-- **Database Storage**: SQLite database with SQL.js for client-side data persistence
+- **Database Storage**: SQLite database with better-sqlite3 for high-performance data persistence
 - **Search & Pagination**: Search through data with pagination support
 - **Data Export**: Export processed data back to CSV format
 - **Error Handling**: Comprehensive error handling with detailed error reports
 - **TypeScript**: Full TypeScript support with type safety
 - **Clean Architecture**: MVC pattern with services, controllers, and utilities
+- **Security Features**: File size limits, MIME type validation, and CSV formula injection protection
 
 ## 📋 Prerequisites
 
@@ -85,6 +86,8 @@ backend/
 ├── database/            # Database configuration
 │   └── init.ts
 ├── data/               # Database files (auto-created)
+│   ├── .gitignore     # Ignores database files
+│   └── csv_data.db    # SQLite database file (auto-created)
 ├── uploads/            # Temporary file uploads
 ├── dist/               # Compiled JavaScript
 └── index.ts            # Application entry point
@@ -286,6 +289,29 @@ Clear all data from the database.
 }
 ```
 
+## 🚨 Error Codes
+
+### File Upload Errors
+
+- `NO_FILE`: No file was uploaded
+- `FILE_VALIDATION_FAILED`: File validation failed (size, type, or extension)
+- `FILE_TOO_LARGE`: File size exceeds 10MB limit
+- `TOO_MANY_FILES`: More than one file uploaded
+- `INVALID_FILE_TYPE`: File type is not CSV
+
+### Example Error Response
+
+```json
+{
+  "error": "File validation failed",
+  "details": [
+    "File size exceeds 10MB limit",
+    "File type 'application/pdf' is not allowed"
+  ],
+  "code": "FILE_VALIDATION_FAILED"
+}
+```
+
 ## 📊 CSV Format
 
 ### Expected CSV Headers
@@ -346,9 +372,32 @@ CREATE TABLE csv_data (
 
 ### Database
 
-- Uses SQL.js for client-side SQLite database
-- Database file: `data/csv_data.db`
+- Uses better-sqlite3 for high-performance SQLite database
+- Database file: `data/csv_data.db` (real SQLite file)
+- WAL mode enabled for better performance
 - Automatically created on first run
+- Graceful shutdown handling
+
+## 🔒 Security Features
+
+### File Upload Security
+
+- **File Size Limit**: Maximum 10MB per file upload
+- **MIME Type Validation**: Only allows CSV files (`text/csv`, `application/csv`, `text/plain`, `application/vnd.ms-excel`)
+- **File Extension Validation**: Only accepts `.csv` files
+- **File Name Validation**: Prevents directory traversal attacks
+
+### CSV Formula Injection Protection
+
+- **Export Protection**: All exported CSV data is sanitized to prevent formula injection
+- **Prefix Guard**: Values starting with `=`, `+`, `-`, `@`, `\t`, or `\r` are prefixed with `'` to prevent execution
+- **Command Injection Detection**: Warns about suspicious patterns like `=cmd|` or `=powershell|`
+
+### Error Handling
+
+- **Structured Error Responses**: Consistent error format with error codes
+- **File Validation Errors**: Detailed validation error messages
+- **Multer Error Handling**: Proper handling of file upload errors
 
 ## 🚨 Error Handling
 

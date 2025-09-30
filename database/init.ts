@@ -1,4 +1,4 @@
-import initSqlJs from "sql.js";
+import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -14,19 +14,15 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-let db: any = null;
+let db: Database.Database | null = null;
 
-export async function initDatabase() {
+export function initDatabase(): void {
   try {
-    const SQL = await initSqlJs();
+    // Create or open database file
+    db = new Database(dbPath);
 
-    // Load existing database or create new one
-    let data: Uint8Array | undefined;
-    if (fs.existsSync(dbPath)) {
-      data = new Uint8Array(fs.readFileSync(dbPath));
-    }
-
-    db = new SQL.Database(data);
+    // Enable WAL mode for better performance
+    db.pragma("journal_mode = WAL");
 
     // Create the main data table
     db.exec(`
@@ -63,12 +59,21 @@ export async function initDatabase() {
   }
 }
 
-// Function to save database to file
-export function saveDatabase() {
+// Function to close database connection
+export function closeDatabase(): void {
   if (db) {
-    const data = db.export();
-    fs.writeFileSync(dbPath, Buffer.from(data));
+    db.close();
+    db = null;
+    console.log("Database connection closed");
   }
+}
+
+// Function to get database instance
+export function getDatabase(): Database.Database {
+  if (!db) {
+    throw new Error("Database not initialized. Call initDatabase() first.");
+  }
+  return db;
 }
 
 export { db };

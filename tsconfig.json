@@ -12,8 +12,8 @@
     "outDir": "./dist",
     "rootDir": "./",
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "../frontend"]
+  "exclude": ["node_modules", "dist", "../frontend", "tests"]
 }

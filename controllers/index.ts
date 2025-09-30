@@ -1,1 +1,1 @@
-export * from "./csvController.js";
+export * from "./csvController";

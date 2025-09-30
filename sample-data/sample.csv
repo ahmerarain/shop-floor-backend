@@ -1,0 +1,21 @@
+Part Mark,Assembly Mark,Material,Thickness,Quantity,Length,Width,Height,Weight,Notes
+PART001,ASSY001,Steel,5mm,10,100,50,25,2.5,Sample steel part for testing
+PART002,ASSY001,Aluminum,3mm,5,80,40,20,1.2,Lightweight aluminum component
+PART003,ASSY002,Steel,8mm,2,150,75,30,4.8,Heavy duty steel bracket
+PART004,ASSY002,Plastic,2mm,20,60,30,15,0.3,Plastic housing component
+PART005,ASSY003,Steel,6mm,8,120,60,25,3.2,Medium steel plate
+PART006,ASSY003,Aluminum,4mm,12,90,45,22,1.8,Aluminum mounting plate
+PART007,ASSY004,Steel,10mm,1,200,100,40,8.0,Base plate for assembly
+PART008,ASSY004,Plastic,1.5mm,25,40,20,10,0.15,Small plastic cover
+PART009,ASSY005,Steel,7mm,6,110,55,28,3.8,Steel support bracket
+PART010,ASSY005,Aluminum,3.5mm,15,70,35,18,1.4,Aluminum connector piece
+PART011,ASSY006,Steel,9mm,3,180,90,35,6.5,Heavy steel beam
+PART012,ASSY006,Plastic,2.5mm,18,50,25,12,0.4,Plastic spacer
+PART013,ASSY007,Steel,5.5mm,7,95,47,24,2.8,Steel mounting bracket
+PART014,ASSY007,Aluminum,4.5mm,9,85,42,21,2.1,Aluminum support piece
+PART015,ASSY008,Steel,11mm,1,250,125,50,12.5,Foundation steel plate
+PART016,ASSY008,Plastic,3mm,22,55,27,14,0.6,Plastic housing cover
+PART017,ASSY009,Steel,6.5mm,5,130,65,32,4.2,Steel structural member
+PART018,ASSY009,Aluminum,5mm,11,75,37,19,2.3,Aluminum frame piece
+PART019,ASSY010,Steel,8.5mm,4,160,80,38,6.8,Steel cross member
+PART020,ASSY010,Plastic,1.8mm,28,35,17,9,0.2,Small plastic component

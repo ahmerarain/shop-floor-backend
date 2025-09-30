@@ -8,8 +8,8 @@ import {
   getAllCsvData,
   deleteCsvData,
   clearAllCsvData,
-} from "../services/csvService.js";
-import { exportDataCsv, cleanupFile } from "../utils/csv.js";
+} from "../services/csvService";
+import { exportDataCsv, cleanupFile } from "../utils/csv";
 
 // Upload and process CSV
 export async function uploadCsv(req: Request, res: Response): Promise<void> {
@@ -171,6 +171,39 @@ export function deleteData(req: Request, res: Response): void {
   }
 }
 
+export function deleteById(req: Request, res: Response): void {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      res.status(400).json({ error: "ID is required and cannot be empty" });
+      return;
+    }
+
+    // Validate that all IDs are numbers
+    if (isNaN(Number(id))) {
+      res.status(400).json({ error: "ID must be a valid number" });
+      return;
+    }
+
+    const result = deleteCsvData([Number(id)]);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        deletedCount: result.deletedCount,
+        message: `Successfully deleted ${result.deletedCount} record(s)`,
+      });
+    } else {
+      res
+        .status(500)
+        .json({ error: result.error || "Failed to delete records" });
+    }
+  } catch (error) {
+    console.error("Delete data error:", error);
+    res.status(500).json({ error: "Failed to delete records" });
+  }
+}
 // Clear all data from database
 export function clearAllData(req: Request, res: Response): void {
   try {

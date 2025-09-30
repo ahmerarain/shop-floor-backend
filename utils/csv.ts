@@ -1,13 +1,18 @@
 import path from "path";
 import fs from "fs";
 import { createObjectCsvWriter } from "csv-writer";
-import { FIELD_MAPPING } from "./validation.js";
+import { FIELD_MAPPING } from "./validation";
+import { sanitizeRowForCsv } from "./fileValidation";
 
-// Export error CSV with invalid rows
+// Export error CSV with invalid rows and formula injection protection
 export async function exportErrorCsv(invalidRows: any[]): Promise<void> {
   if (invalidRows.length === 0) return;
 
   const errorCsvPath = path.join(process.cwd(), "error.csv");
+
+  // Sanitize all rows to prevent formula injection
+  const sanitizedRows = invalidRows.map((row) => sanitizeRowForCsv(row));
+
   const csvWriter = createObjectCsvWriter({
     path: errorCsvPath,
     header: [
@@ -23,12 +28,16 @@ export async function exportErrorCsv(invalidRows: any[]): Promise<void> {
     ],
   });
 
-  await csvWriter.writeRecords(invalidRows);
+  await csvWriter.writeRecords(sanitizedRows);
 }
 
-// Export data CSV
+// Export data CSV with formula injection protection
 export async function exportDataCsv(rows: any[]): Promise<string> {
   const csvPath = path.join(process.cwd(), "export.csv");
+
+  // Sanitize all rows to prevent formula injection
+  const sanitizedRows = rows.map((row) => sanitizeRowForCsv(row));
+
   const csvWriter = createObjectCsvWriter({
     path: csvPath,
     header: [
@@ -45,7 +54,7 @@ export async function exportDataCsv(rows: any[]): Promise<string> {
     ],
   });
 
-  await csvWriter.writeRecords(rows);
+  await csvWriter.writeRecords(sanitizedRows);
   return csvPath;
 }
 
