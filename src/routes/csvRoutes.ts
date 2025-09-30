@@ -9,13 +9,20 @@ import {
   checkErrorFile,
   deleteData,
   clearAllData,
-} from "../controllers/csvController.js";
+  deleteById,
+} from "../controllers/csvController";
+import { validateUploadedFile } from "../utils/fileValidation";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-// Upload and process CSV
-router.post("/upload", upload.single("csvFile"), uploadCsv);
+// Upload and process CSV with file validation
+router.post(
+  "/upload",
+  upload.single("csvFile"),
+  validateUploadedFile,
+  uploadCsv
+);
 
 // Get all data with pagination and search
 router.get("/data", getData);
@@ -33,7 +40,9 @@ router.get("/error", downloadErrorCsv);
 router.get("/error/check", checkErrorFile);
 
 // Delete specific records by IDs
+
 router.delete("/data", deleteData);
+router.delete("/:id", deleteById);
 
 // Clear all data from database
 router.delete("/data/clear", clearAllData);

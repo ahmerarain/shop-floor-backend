@@ -1,18 +1,17 @@
 import fs from "fs";
 import csv from "csv-parser";
-import { saveDatabase } from "../database/init.js";
 import {
   executeSelectQuery,
   executeCountQuery,
   executeBatchInsert,
   executeModifyQuery,
-} from "../utils/database.js";
+} from "../utils/database";
 import {
   validateRow,
   getFieldValueSafe,
   FIELD_MAPPING,
-} from "../utils/validation.js";
-import { exportErrorCsv } from "../utils/csv.js";
+} from "../utils/validation";
+import { exportErrorCsv } from "../utils/csv";
 
 export interface ProcessedCsvResult {
   success: boolean;
@@ -104,7 +103,6 @@ export async function processCsvFile(
       ]);
 
       executeBatchInsert(insertQuery, insertData);
-      saveDatabase();
     }
 
     // Export error CSV if there are invalid rows
@@ -137,7 +135,6 @@ export function getCsvData(
   limit: number = 100
 ): PaginatedResult {
   const offset = (page - 1) * limit;
-  console.log("search", search);
 
   let query = "SELECT * FROM csv_data";
   let params: any[] = [];
@@ -203,8 +200,6 @@ export function updateCsvData(
       id,
     ]);
 
-    saveDatabase();
-
     return { success: true, changes };
   } catch (error) {
     console.error("Update error:", error);
@@ -234,7 +229,6 @@ export function deleteCsvData(ids: number[]): {
     const query = `DELETE FROM csv_data WHERE id IN (${placeholders})`;
 
     const deletedCount = executeModifyQuery(query, ids);
-    saveDatabase();
 
     return { success: true, deletedCount };
   } catch (error) {
@@ -252,7 +246,6 @@ export function clearAllCsvData(): { success: boolean; error?: string } {
   try {
     const query = "DELETE FROM csv_data";
     executeModifyQuery(query);
-    saveDatabase();
 
     return { success: true };
   } catch (error) {

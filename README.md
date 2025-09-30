@@ -1,22 +1,23 @@
 # CSV Ingest Backend
 
-A robust Node.js/TypeScript backend service for processing CSV files with data validation, storage, and export capabilities. Built with Express.js and SQL.js for efficient data management.
+A robust Node.js/TypeScript backend service for processing CSV files with data validation, storage, and export capabilities. Built with Express.js and better-sqlite3 for high-performance data management.
 
 ## 🚀 Features
 
 - **CSV Upload & Processing**: Upload CSV files with automatic validation
 - **Data Validation**: Mandatory field validation with detailed error reporting
-- **Database Storage**: SQLite database with SQL.js for client-side data persistence
+- **Database Storage**: SQLite database with better-sqlite3 for high-performance data persistence
 - **Search & Pagination**: Search through data with pagination support
 - **Data Export**: Export processed data back to CSV format
 - **Error Handling**: Comprehensive error handling with detailed error reports
 - **TypeScript**: Full TypeScript support with type safety
 - **Clean Architecture**: MVC pattern with services, controllers, and utilities
+- **Security Features**: File size limits, MIME type validation, and CSV formula injection protection
 
 ## 📋 Prerequisites
 
 - Node.js (v18 or higher)
-- pnpm (recommended) or npm
+- npm (package manager)
 - TypeScript
 
 ## 🛠️ Installation
@@ -31,15 +32,11 @@ A robust Node.js/TypeScript backend service for processing CSV files with data v
 2. **Install dependencies**
 
    ```bash
-   pnpm install
-   # or
    npm install
    ```
 
 3. **Build the project**
    ```bash
-   pnpm run build
-   # or
    npm run build
    ```
 
@@ -48,17 +45,12 @@ A robust Node.js/TypeScript backend service for processing CSV files with data v
 ### Development Mode
 
 ```bash
-pnpm run dev
-# or
 npm run dev
 ```
 
 ### Production Mode
 
 ```bash
-pnpm run build
-pnpm start
-# or
 npm run build
 npm start
 ```
@@ -69,25 +61,42 @@ The server will start on port 5008 (or the port specified in the PORT environmen
 
 ```
 backend/
-├── controllers/          # Request/response handling
-│   ├── csvController.ts
-│   └── index.ts
-├── services/            # Business logic
-│   ├── csvService.ts
-│   └── index.ts
-├── utils/               # Utility functions
-│   ├── validation.ts    # Data validation utilities
-│   ├── database.ts      # Database operation utilities
-│   ├── csv.ts          # CSV processing utilities
-│   └── index.ts
-├── routes/              # API routes
-│   └── csvRoutes.ts
-├── database/            # Database configuration
-│   └── init.ts
+├── src/                 # Source code
+│   ├── controllers/     # Request/response handling
+│   │   ├── csvController.ts
+│   │   └── index.ts
+│   ├── services/        # Business logic
+│   │   ├── csvService.ts
+│   │   └── index.ts
+│   ├── utils/           # Utility functions
+│   │   ├── validation.ts    # Data validation utilities
+│   │   ├── database.ts      # Database operation utilities
+│   │   ├── csv.ts          # CSV processing utilities
+│   │   ├── fileValidation.ts # File upload security
+│   │   └── index.ts
+│   ├── routes/          # API routes
+│   │   └── csvRoutes.ts
+│   ├── database/        # Database configuration
+│   │   └── init.ts
+│   └── index.ts         # Application entry point
+├── tests/               # Test files
+│   ├── validation-unit.test.ts
+│   ├── validation.test.ts
+│   ├── upload-simple.test.ts
+│   └── setup.ts
 ├── data/               # Database files (auto-created)
+│   ├── .gitignore     # Ignores database files
+│   └── csv_data.db    # SQLite database file (auto-created)
 ├── uploads/            # Temporary file uploads
+├── sample-data/        # Sample CSV files for testing
+│   ├── sample.csv
+│   └── sample-with-errors.csv
 ├── dist/               # Compiled JavaScript
-└── index.ts            # Application entry point
+├── .github/workflows/  # GitHub Actions CI/CD
+├── Dockerfile          # Docker configuration
+├── docker-compose.yml  # Docker Compose setup
+├── .env.example        # Environment variables template
+└── package.json        # Dependencies and scripts
 ```
 
 ## 🔌 API Endpoints
@@ -99,6 +108,7 @@ backend/
 - `GET /api/csv/error` - Download error CSV file
 - `GET /api/csv/error/check` - Check if error file exists
 - `DELETE /api/csv/data` - Delete specific records by IDs
+- `DELETE /api/csv/data/:id` - Delete specific record by ID
 - `DELETE /api/csv/data/clear` - Clear all data from database
 
 ### POST `/api/csv/upload`
@@ -286,6 +296,29 @@ Clear all data from the database.
 }
 ```
 
+## 🚨 Error Codes
+
+### File Upload Errors
+
+- `NO_FILE`: No file was uploaded
+- `FILE_VALIDATION_FAILED`: File validation failed (size, type, or extension)
+- `FILE_TOO_LARGE`: File size exceeds 10MB limit
+- `TOO_MANY_FILES`: More than one file uploaded
+- `INVALID_FILE_TYPE`: File type is not CSV
+
+### Example Error Response
+
+```json
+{
+  "error": "File validation failed",
+  "details": [
+    "File size exceeds 10MB limit",
+    "File type 'application/pdf' is not allowed"
+  ],
+  "code": "FILE_VALIDATION_FAILED"
+}
+```
+
 ## 📊 CSV Format
 
 ### Expected CSV Headers
@@ -342,13 +375,49 @@ CREATE TABLE csv_data (
 
 ### Environment Variables
 
+Create a `.env` file from `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Available variables:
+
+- `NODE_ENV`: Environment mode (development/production)
 - `PORT`: Server port (default: 5008)
+- `DATABASE_PATH`: SQLite database path (default: ./data/csv_data.db)
+- `MAX_FILE_SIZE`: Maximum file upload size in bytes (default: 10485760)
+- `UPLOAD_DIR`: Upload directory (default: ./uploads)
+- `CORS_ORIGIN`: CORS origin (default: http://localhost:3000)
 
 ### Database
 
-- Uses SQL.js for client-side SQLite database
-- Database file: `data/csv_data.db`
+- Uses better-sqlite3 for high-performance SQLite database
+- Database file: `data/csv_data.db` (real SQLite file)
+- WAL mode enabled for better performance
 - Automatically created on first run
+- Graceful shutdown handling
+
+## 🔒 Security Features
+
+### File Upload Security
+
+- **File Size Limit**: Maximum 10MB per file upload
+- **MIME Type Validation**: Only allows CSV files (`text/csv`, `application/csv`, `text/plain`, `application/vnd.ms-excel`)
+- **File Extension Validation**: Only accepts `.csv` files
+- **File Name Validation**: Prevents directory traversal attacks
+
+### CSV Formula Injection Protection
+
+- **Export Protection**: All exported CSV data is sanitized to prevent formula injection
+- **Prefix Guard**: Values starting with `=`, `+`, `-`, `@`, `\t`, or `\r` are prefixed with `'` to prevent execution
+- **Command Injection Detection**: Warns about suspicious patterns like `=cmd|` or `=powershell|`
+
+### Error Handling
+
+- **Structured Error Responses**: Consistent error format with error codes
+- **File Validation Errors**: Detailed validation error messages
+- **Multer Error Handling**: Proper handling of file upload errors
 
 ## 🚨 Error Handling
 
@@ -375,13 +444,60 @@ All endpoints return appropriate HTTP status codes:
 
 ```bash
 # Development with hot reload
-pnpm run dev
+npm run dev
 
 # Build TypeScript
-pnpm run build
+npm run build
 
 # Start production server
-pnpm start
+npm start
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Type checking
+npm run type-check
+```
+
+### Docker Development
+
+```bash
+# Start with Docker
+npm run docker:up
+
+# View logs
+npm run docker:logs
+
+# Stop services
+npm run docker:down
+
+# Clean up
+npm run docker:clean
+```
+
+### Testing
+
+The project includes comprehensive tests:
+
+- **Unit Tests**: Validation functions and utilities
+- **Integration Tests**: File upload and API endpoints
+- **Coverage**: Test coverage reporting
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests for CI
+npm run test:ci
 ```
 
 ### Code Structure
@@ -390,6 +506,49 @@ pnpm start
 - **Services**: Contain business logic
 - **Utils**: Reusable utility functions
 - **Routes**: Define API endpoints
+
+### TypeScript Configuration
+
+The project uses TypeScript with path aliases for clean imports:
+
+```typescript
+// Using path aliases
+import { csvRoutes } from "@/routes/csvRoutes";
+import { initDatabase } from "@/database/init";
+import { validateRow } from "@/utils/validation";
+```
+
+Path mapping in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}
+```
+
+### Docker Support
+
+The project includes full Docker support:
+
+- **Dockerfile**: Multi-stage build for production
+- **docker-compose.yml**: One-command deployment
+- **Environment Variables**: Configurable via `.env`
+- **Health Checks**: Automatic service monitoring
+- **Volume Persistence**: Data and uploads persist between restarts
+
+### CI/CD
+
+GitHub Actions workflows for:
+
+- **Backend Tests**: Automated testing on Node.js 18.x, 20.x
+- **Docker Build**: Container build and validation
+- **Security Scanning**: Vulnerability detection
+- **Code Quality**: Linting and format checks
 
 ## 📝 License
 
