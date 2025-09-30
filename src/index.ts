@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 5008;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 // Configure multer for file uploads with size limits
 const upload = multer({

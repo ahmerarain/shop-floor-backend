@@ -1,8 +1,8 @@
-import { validateRow } from "../utils/validation";
+import { validateRow } from "../src/utils/validation";
 import {
   sanitizeForCsvInjection,
   sanitizeRowForCsv,
-} from "../utils/fileValidation";
+} from "../src/utils/fileValidation";
 
 // Simple test without database setup
 describe("Validation Functions", () => {

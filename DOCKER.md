@@ -1,143 +1,51 @@
-# Docker Setup for CSV Ingest + Grid MVP
+# 🐳 Docker Setup for CSV Backend
 
-This guide explains how to run the CSV Ingest application using Docker and Docker Compose.
+This document provides comprehensive instructions for running the CSV Backend using Docker.
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Docker (version 20.10 or higher)
-- Docker Compose (version 2.0 or higher)
+- Docker Desktop installed and running
+- Docker Compose (included with Docker Desktop)
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Clone and Setup
+### Option 1: Using the startup script (Recommended)
 
 ```bash
-git clone <repository-url>
-cd csv-ingest-grid-mvp
+./start-docker.sh
 ```
 
-### 2. Environment Configuration
-
-Copy the environment example file:
+### Option 2: Using npm scripts
 
 ```bash
-cp .env.example .env
-```
-
-Edit `.env` file with your preferred settings:
-
-```bash
-# Backend Configuration
-NODE_ENV=production
-PORT=5008
-BACKEND_URL=http://localhost:5008
-
-# Frontend Configuration
-VITE_API_URL=http://localhost:5008
-VITE_APP_NAME=CSV Ingest + Grid MVP
-
-# Database Configuration
-DATABASE_PATH=./data/csv_data.db
-
-# File Upload Configuration
-MAX_FILE_SIZE=10485760
-UPLOAD_DIR=./uploads
-
-# Security Configuration
-CORS_ORIGIN=http://localhost:3000
-
-# Docker Configuration
-COMPOSE_PROJECT_NAME=csv-ingest
-```
-
-### 3. One-Command Deployment
-
-```bash
-# Start all services
+# Start the backend
 npm run docker:up
-
-# Or using docker-compose directly
-docker-compose up -d
-```
-
-### 4. Access the Application
-
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5008
-- **API Documentation**: http://localhost:5008/api/csv/data
-
-## Available Commands
-
-### Docker Commands
-
-```bash
-# Start all services in background
-npm run docker:up
-
-# Stop all services
-npm run docker:down
-
-# Build all images
-npm run docker:build
 
 # View logs
 npm run docker:logs
 
-# Clean up (removes volumes and containers)
-npm run docker:clean
-
-# Seed database with sample data
-npm run seed
+# Stop the backend
+npm run docker:down
 ```
 
-### Individual Service Commands
+### Option 3: Using Docker Compose directly
 
 ```bash
-# Start only backend
-docker-compose up backend
+# Build and start
+docker-compose up -d --build
 
-# Start only frontend
-docker-compose up frontend
+# View logs
+docker-compose logs -f
 
-# Rebuild specific service
-docker-compose build backend
-docker-compose build frontend
+# Stop
+docker-compose down
 ```
 
-## Services
+## 🔧 Configuration
 
-### Backend Service
+### Environment Variables
 
-- **Image**: `csv-backend`
-- **Port**: 5008
-- **Health Check**: `/api/csv/data`
-- **Volumes**:
-  - `backend_data` (database files)
-  - `backend_uploads` (uploaded files)
-
-### Frontend Service
-
-- **Image**: `csv-frontend`
-- **Port**: 3000 (mapped to 80 in container)
-- **Health Check**: `/`
-- **Dependencies**: Backend service must be healthy
-
-## Sample Data
-
-The application includes sample CSV data for testing:
-
-- **Valid Data**: `sample-data/sample.csv` (20 rows)
-- **Data with Errors**: `sample-data/sample-with-errors.csv` (7 rows with validation errors)
-
-To seed the database with sample data:
-
-```bash
-npm run seed
-```
-
-## Environment Variables
-
-### Backend Variables
+The backend uses the following environment variables (configured in `.env.example`):
 
 | Variable        | Default                 | Description            |
 | --------------- | ----------------------- | ---------------------- |
@@ -148,80 +56,125 @@ npm run seed
 | `UPLOAD_DIR`    | `./uploads`             | Upload directory       |
 | `CORS_ORIGIN`   | `http://localhost:3000` | CORS origin            |
 
-### Frontend Variables
-
-| Variable        | Default                 | Description      |
-| --------------- | ----------------------- | ---------------- |
-| `VITE_API_URL`  | `http://localhost:5008` | Backend API URL  |
-| `VITE_APP_NAME` | `CSV Ingest + Grid MVP` | Application name |
-
-## Development
-
-### Local Development with Docker
+### Creating .env file
 
 ```bash
-# Start only backend in Docker
-npm run docker:dev
+# Copy the example file
+cp .env.example .env
 
-# Run frontend locally
-cd frontend && npm run dev
+# Edit with your preferred settings
+nano .env
 ```
 
-### Debugging
+## 📁 Project Structure
+
+```
+backend/
+├── Dockerfile              # Backend container definition
+├── docker-compose.yml      # Service orchestration
+├── .env.example           # Environment variables template
+├── .dockerignore          # Files to ignore in Docker build
+├── start-docker.sh        # Quick start script
+├── sample-data/           # Sample CSV files for seeding
+│   ├── sample.csv
+│   └── sample-with-errors.csv
+└── src/                   # Source code
+    ├── controllers/
+    ├── database/
+    ├── routes/
+    ├── services/
+    └── utils/
+```
+
+## 🗄️ Data Persistence
+
+The Docker setup includes persistent volumes for:
+
+- **Database**: `backend_data` volume stores SQLite database files
+- **Uploads**: `backend_uploads` volume stores uploaded CSV files
+
+Data persists between container restarts and updates.
+
+## 🔍 Health Checks
+
+The backend includes health checks that verify:
+
+- Service is running on port 5008
+- API endpoint `/api/csv/data` responds with 200 status
+- Checks run every 30 seconds with 3 retries
+
+## 📊 Available Scripts
+
+| Script                 | Description                    |
+| ---------------------- | ------------------------------ |
+| `npm run docker:build` | Build Docker image             |
+| `npm run docker:run`   | Run container directly         |
+| `npm run docker:up`    | Start with docker-compose      |
+| `npm run docker:down`  | Stop services                  |
+| `npm run docker:logs`  | View logs                      |
+| `npm run docker:clean` | Clean up volumes and images    |
+| `npm run seed`         | Seed database with sample data |
+
+## 🌐 Access Points
+
+- **API Base URL**: http://localhost:5008
+- **Health Check**: http://localhost:5008/api/csv/data
+- **Upload Endpoint**: http://localhost:5008/api/csv/upload
+- **Data Endpoint**: http://localhost:5008/api/csv/data
+
+## 🧪 Testing with Sample Data
+
+### Seed the database
 
 ```bash
-# View backend logs
-docker-compose logs -f backend
+# Build first
+npm run build
 
-# View frontend logs
-docker-compose logs -f frontend
-
-# Access backend container
-docker-compose exec backend sh
-
-# Access frontend container
-docker-compose exec frontend sh
+# Seed with sample data
+npm run seed
 ```
 
-## Production Deployment
+### Sample CSV files
 
-### 1. Environment Setup
+- `sample-data/sample.csv` - Valid data for testing
+- `sample-data/sample-with-errors.csv` - Data with validation errors
+
+## 🔧 Development
+
+### Running in development mode
 
 ```bash
-# Set production environment
-export NODE_ENV=production
-export VITE_API_URL=https://your-api-domain.com
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-### 2. Build and Deploy
+### Building for production
 
 ```bash
-# Build production images
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
+# Build TypeScript
+npm run build
 
-# Deploy
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Build Docker image
+npm run docker:build
 ```
 
-### 3. SSL/HTTPS (Optional)
-
-For production, consider using a reverse proxy like nginx or traefik for SSL termination.
-
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Port Already in Use**
+1. **Port already in use**
 
    ```bash
    # Check what's using the port
-   lsof -i :3000
    lsof -i :5008
 
-   # Kill the process or change ports in docker-compose.yml
+   # Kill the process or change port in docker-compose.yml
    ```
 
-2. **Database Permission Issues**
+2. **Database permission issues**
 
    ```bash
    # Reset database volume
@@ -229,7 +182,7 @@ For production, consider using a reverse proxy like nginx or traefik for SSL ter
    docker-compose up -d
    ```
 
-3. **Build Failures**
+3. **Build failures**
 
    ```bash
    # Clean Docker cache
@@ -239,65 +192,58 @@ For production, consider using a reverse proxy like nginx or traefik for SSL ter
    docker-compose build --no-cache
    ```
 
-4. **Health Check Failures**
+4. **Health check failures**
 
    ```bash
    # Check service status
    docker-compose ps
 
    # Check logs
-   docker-compose logs backend
+   docker-compose logs csv-backend
    ```
 
-### Logs and Monitoring
+### Logs and Debugging
 
 ```bash
 # View all logs
 docker-compose logs
 
+# View backend logs only
+docker-compose logs csv-backend
+
 # Follow logs in real-time
-docker-compose logs -f
+docker-compose logs -f csv-backend
 
-# View specific service logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
+# Check container status
+docker-compose ps
 ```
 
-## Security Considerations
+## 🔒 Security Features
 
-- Change default ports in production
-- Use environment variables for sensitive data
-- Enable HTTPS in production
-- Regularly update base images
-- Use non-root users in containers (already configured)
+- **File Upload Security**: 10MB limit, MIME type validation
+- **CSV Formula Injection Protection**: Sanitizes exported data
+- **CORS Configuration**: Configurable origin restrictions
+- **Health Checks**: Monitors service availability
 
-## Performance Optimization
+## 📈 Performance
 
-- Use multi-stage builds (already implemented)
-- Enable gzip compression (already configured)
-- Use production-ready nginx configuration
-- Monitor resource usage with `docker stats`
+- **Multi-stage build**: Optimized image size
+- **Alpine Linux**: Minimal base image
+- **Volume mounting**: Persistent data storage
+- **Health checks**: Automatic service monitoring
 
-## Backup and Recovery
+## 🚀 Production Deployment
 
-### Database Backup
+For production deployment:
 
-```bash
-# Create backup
-docker-compose exec backend cp /app/data/csv_data.db /app/backup_$(date +%Y%m%d_%H%M%S).db
+1. Update environment variables in `.env`
+2. Set `NODE_ENV=production`
+3. Configure proper CORS origins
+4. Set up reverse proxy (nginx/traefik)
+5. Configure SSL/TLS certificates
+6. Set up monitoring and logging
 
-# Restore from backup
-docker-compose exec backend cp /app/backup_file.db /app/data/csv_data.db
-```
-
-### Volume Backup
-
-```bash
-# Backup volumes
-docker run --rm -v csv-ingest_backend_data:/data -v $(pwd):/backup alpine tar czf /backup/backend_data_backup.tar.gz -C /data .
-```
-
-## Support
+## 📞 Support
 
 For issues or questions:
 

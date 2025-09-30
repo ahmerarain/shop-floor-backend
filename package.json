@@ -2,10 +2,10 @@
   "name": "csv-ingest-backend",
   "version": "1.0.0",
   "description": "Backend for CSV Ingest + Grid MVP",
-  "main": "index.js",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest",
@@ -16,7 +16,10 @@
     "type-check": "tsc --noEmit",
     "docker:build": "docker build -t csv-backend .",
     "docker:run": "docker run -p 5008:5008 csv-backend",
-    "docker:dev": "docker-compose up backend",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:clean": "docker-compose down -v && docker system prune -f",
     "seed": "node -e \"const fs = require('fs'); const path = require('path'); const csv = require('csv-parser'); const { initDatabase } = require('./dist/database/init.js'); const { executeBatchInsert } = require('./dist/utils/database.js'); initDatabase(); const samplePath = path.join(__dirname, '../sample-data/sample.csv'); if (fs.existsSync(samplePath)) { console.log('Seeding database with sample data...'); const rows = []; fs.createReadStream(samplePath).pipe(csv()).on('data', (row) => rows.push(row)).on('end', () => { const insertQuery = 'INSERT INTO csv_data (part_mark, assembly_mark, material, thickness, quantity, length, width, height, weight, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'; const insertData = rows.map(row => [row['Part Mark'], row['Assembly Mark'], row['Material'], row['Thickness'], parseInt(row['Quantity']) || 1, parseFloat(row['Length']) || null, parseFloat(row['Width']) || null, parseFloat(row['Height']) || null, parseFloat(row['Weight']) || null, row['Notes'] || null]); executeBatchInsert(insertQuery, insertData); console.log('Database seeded successfully!'); }); } else { console.log('Sample data file not found'); }\""
   },
   "dependencies": {

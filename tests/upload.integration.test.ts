@@ -3,8 +3,8 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { csvRoutes } from "../routes/csvRoutes";
-import { initDatabase, closeDatabase } from "../database/init";
+import { csvRoutes } from "../src/routes/csvRoutes";
+import { initDatabase, closeDatabase } from "../src/database/init";
 
 // Create test app
 const app = express();

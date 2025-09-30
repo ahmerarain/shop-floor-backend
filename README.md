@@ -1,6 +1,6 @@
 # CSV Ingest Backend
 
-A robust Node.js/TypeScript backend service for processing CSV files with data validation, storage, and export capabilities. Built with Express.js and SQL.js for efficient data management.
+A robust Node.js/TypeScript backend service for processing CSV files with data validation, storage, and export capabilities. Built with Express.js and better-sqlite3 for high-performance data management.
 
 ## 🚀 Features
 
@@ -17,7 +17,7 @@ A robust Node.js/TypeScript backend service for processing CSV files with data v
 ## 📋 Prerequisites
 
 - Node.js (v18 or higher)
-- pnpm (recommended) or npm
+- npm (package manager)
 - TypeScript
 
 ## 🛠️ Installation
@@ -32,15 +32,11 @@ A robust Node.js/TypeScript backend service for processing CSV files with data v
 2. **Install dependencies**
 
    ```bash
-   pnpm install
-   # or
    npm install
    ```
 
 3. **Build the project**
    ```bash
-   pnpm run build
-   # or
    npm run build
    ```
 
@@ -49,17 +45,12 @@ A robust Node.js/TypeScript backend service for processing CSV files with data v
 ### Development Mode
 
 ```bash
-pnpm run dev
-# or
 npm run dev
 ```
 
 ### Production Mode
 
 ```bash
-pnpm run build
-pnpm start
-# or
 npm run build
 npm start
 ```
@@ -70,27 +61,42 @@ The server will start on port 5008 (or the port specified in the PORT environmen
 
 ```
 backend/
-├── controllers/          # Request/response handling
-│   ├── csvController.ts
-│   └── index.ts
-├── services/            # Business logic
-│   ├── csvService.ts
-│   └── index.ts
-├── utils/               # Utility functions
-│   ├── validation.ts    # Data validation utilities
-│   ├── database.ts      # Database operation utilities
-│   ├── csv.ts          # CSV processing utilities
-│   └── index.ts
-├── routes/              # API routes
-│   └── csvRoutes.ts
-├── database/            # Database configuration
-│   └── init.ts
+├── src/                 # Source code
+│   ├── controllers/     # Request/response handling
+│   │   ├── csvController.ts
+│   │   └── index.ts
+│   ├── services/        # Business logic
+│   │   ├── csvService.ts
+│   │   └── index.ts
+│   ├── utils/           # Utility functions
+│   │   ├── validation.ts    # Data validation utilities
+│   │   ├── database.ts      # Database operation utilities
+│   │   ├── csv.ts          # CSV processing utilities
+│   │   ├── fileValidation.ts # File upload security
+│   │   └── index.ts
+│   ├── routes/          # API routes
+│   │   └── csvRoutes.ts
+│   ├── database/        # Database configuration
+│   │   └── init.ts
+│   └── index.ts         # Application entry point
+├── tests/               # Test files
+│   ├── validation-unit.test.ts
+│   ├── validation.test.ts
+│   ├── upload-simple.test.ts
+│   └── setup.ts
 ├── data/               # Database files (auto-created)
 │   ├── .gitignore     # Ignores database files
 │   └── csv_data.db    # SQLite database file (auto-created)
 ├── uploads/            # Temporary file uploads
+├── sample-data/        # Sample CSV files for testing
+│   ├── sample.csv
+│   └── sample-with-errors.csv
 ├── dist/               # Compiled JavaScript
-└── index.ts            # Application entry point
+├── .github/workflows/  # GitHub Actions CI/CD
+├── Dockerfile          # Docker configuration
+├── docker-compose.yml  # Docker Compose setup
+├── .env.example        # Environment variables template
+└── package.json        # Dependencies and scripts
 ```
 
 ## 🔌 API Endpoints
@@ -102,6 +108,7 @@ backend/
 - `GET /api/csv/error` - Download error CSV file
 - `GET /api/csv/error/check` - Check if error file exists
 - `DELETE /api/csv/data` - Delete specific records by IDs
+- `DELETE /api/csv/data/:id` - Delete specific record by ID
 - `DELETE /api/csv/data/clear` - Clear all data from database
 
 ### POST `/api/csv/upload`
@@ -368,7 +375,20 @@ CREATE TABLE csv_data (
 
 ### Environment Variables
 
+Create a `.env` file from `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Available variables:
+
+- `NODE_ENV`: Environment mode (development/production)
 - `PORT`: Server port (default: 5008)
+- `DATABASE_PATH`: SQLite database path (default: ./data/csv_data.db)
+- `MAX_FILE_SIZE`: Maximum file upload size in bytes (default: 10485760)
+- `UPLOAD_DIR`: Upload directory (default: ./uploads)
+- `CORS_ORIGIN`: CORS origin (default: http://localhost:3000)
 
 ### Database
 
@@ -424,13 +444,60 @@ All endpoints return appropriate HTTP status codes:
 
 ```bash
 # Development with hot reload
-pnpm run dev
+npm run dev
 
 # Build TypeScript
-pnpm run build
+npm run build
 
 # Start production server
-pnpm start
+npm start
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Type checking
+npm run type-check
+```
+
+### Docker Development
+
+```bash
+# Start with Docker
+npm run docker:up
+
+# View logs
+npm run docker:logs
+
+# Stop services
+npm run docker:down
+
+# Clean up
+npm run docker:clean
+```
+
+### Testing
+
+The project includes comprehensive tests:
+
+- **Unit Tests**: Validation functions and utilities
+- **Integration Tests**: File upload and API endpoints
+- **Coverage**: Test coverage reporting
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests for CI
+npm run test:ci
 ```
 
 ### Code Structure
@@ -439,6 +506,49 @@ pnpm start
 - **Services**: Contain business logic
 - **Utils**: Reusable utility functions
 - **Routes**: Define API endpoints
+
+### TypeScript Configuration
+
+The project uses TypeScript with path aliases for clean imports:
+
+```typescript
+// Using path aliases
+import { csvRoutes } from "@/routes/csvRoutes";
+import { initDatabase } from "@/database/init";
+import { validateRow } from "@/utils/validation";
+```
+
+Path mapping in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}
+```
+
+### Docker Support
+
+The project includes full Docker support:
+
+- **Dockerfile**: Multi-stage build for production
+- **docker-compose.yml**: One-command deployment
+- **Environment Variables**: Configurable via `.env`
+- **Health Checks**: Automatic service monitoring
+- **Volume Persistence**: Data and uploads persist between restarts
+
+### CI/CD
+
+GitHub Actions workflows for:
+
+- **Backend Tests**: Automated testing on Node.js 18.x, 20.x
+- **Docker Build**: Container build and validation
+- **Security Scanning**: Vulnerability detection
+- **Code Quality**: Linting and format checks
 
 ## 📝 License
 

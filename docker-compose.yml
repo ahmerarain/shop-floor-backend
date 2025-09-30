@@ -1,9 +1,9 @@
 version: "3.8"
 
 services:
-  backend:
+  csv-backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: csv-backend
     ports:
@@ -11,6 +11,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5008
+      - DATABASE_PATH=./data/csv_data.db
+      - MAX_FILE_SIZE=10485760
+      - UPLOAD_DIR=./uploads
+      - CORS_ORIGIN=http://localhost:3000
     volumes:
       - backend_data:/app/data
       - backend_uploads:/app/uploads
@@ -25,26 +29,6 @@ services:
           "-e",
           "const http = require('http'); const options = { host: 'localhost', port: 5008, path: '/api/csv/data', timeout: 2000 }; const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.end();",
         ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: csv-frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - csv-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
