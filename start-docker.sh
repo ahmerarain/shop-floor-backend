@@ -19,14 +19,14 @@ fi
 
 # Build and start services
 echo "🔨 Building and starting backend service..."
-docker-compose up -d --build
+docker compose up -d --build
 
 # Wait for service to be healthy
 echo "⏳ Waiting for service to be ready..."
 sleep 10
 
 # Check if service is running
-if docker-compose ps | grep -q "Up (healthy)"; then
+if docker compose ps | grep -q "Up (healthy)"; then
     echo "✅ Backend service is running and healthy!"
     echo ""
     echo "🌐 Access the backend:"
