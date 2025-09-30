@@ -1,5 +1,5 @@
 // Test setup file
-import { initDatabase, closeDatabase } from "../database/init";
+import { initDatabase, closeDatabase } from "../src/database/init";
 
 // Global test setup
 beforeAll(async () => {

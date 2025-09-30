@@ -2,12 +2,8 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import path from "path";
-import { fileURLToPath } from "url";
-import { csvRoutes } from "./routes/csvRoutes";
 import { initDatabase, closeDatabase } from "./database/init";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { csvRoutes } from "./routes/csvRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 5008;
