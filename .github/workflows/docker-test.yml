@@ -1,0 +1,53 @@
+name: Docker Test
+
+on:
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main, develop]
+
+jobs:
+    docker-test:
+        name: Docker Build and Test
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Build Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  push: false
+                  tags: csv-backend:test
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            - name: Test Docker Compose
+              run: |
+                  docker-compose config
+                  echo "Docker Compose configuration is valid"
+
+            - name: Test Docker run
+              run: |
+                  # Build the image
+                  docker build -t csv-backend-test .
+
+                  # Test that the container starts
+                  docker run -d --name csv-backend-test -p 5008:5008 csv-backend-test
+
+                  # Wait for the service to start
+                  sleep 10
+
+                  # Test health check
+                  curl -f http://localhost:5008/api/csv/data || exit 1
+
+                  # Clean up
+                  docker stop csv-backend-test
+                  docker rm csv-backend-test
+
+                  echo "✅ Docker container test passed!"
