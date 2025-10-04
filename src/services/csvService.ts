@@ -40,6 +40,18 @@ export interface CsvData {
   notes?: string;
   created_at?: string;
   updated_at?: string;
+  // Edit tracking fields
+  edited_by?: string;
+  edited_at?: string;
+  fields_changed?: string;
+  // Validation tracking fields
+  is_valid?: boolean;
+  error_codes?: string;
+  error_messages?: string;
+  last_validated_at?: string;
+  // Source tracking fields
+  source_filename?: string;
+  line_no?: number;
 }
 
 export interface PaginatedResult {
@@ -51,7 +63,8 @@ export interface PaginatedResult {
 
 // Process uploaded CSV file
 export async function processCsvFile(
-  filePath: string
+  filePath: string,
+  sourceFilename?: string
 ): Promise<ProcessedCsvResult> {
   try {
     const validRows: any[] = [];
@@ -90,8 +103,8 @@ export async function processCsvFile(
     // Save valid rows to database
     if (validRows.length > 0) {
       const insertQuery = `
-        INSERT INTO csv_data (part_mark, assembly_mark, material, thickness, quantity, length, width, height, weight, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO csv_data (part_mark, assembly_mark, material, thickness, quantity, length, width, height, weight, notes, is_valid, source_filename, line_no)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       const insertData = validRows.map((row) => [
@@ -105,6 +118,9 @@ export async function processCsvFile(
         getFieldValueSafe(row, "height"),
         getFieldValueSafe(row, "weight"),
         getFieldValueSafe(row, "notes"),
+        1, // is_valid = true for valid rows
+        sourceFilename || "unknown", // source_filename
+        row.rowNumber, // line_no
       ]);
 
       executeBatchInsert(insertQuery, insertData);
@@ -229,6 +245,39 @@ export function updateCsvData(
         ...data,
         updated_at: new Date().toISOString(),
       };
+
+      // Determine which fields changed
+      const fieldsChanged: string[] = [];
+      const fields = [
+        "part_mark",
+        "assembly_mark",
+        "material",
+        "thickness",
+        "quantity",
+        "length",
+        "width",
+        "height",
+        "weight",
+        "notes",
+      ];
+
+      for (const field of fields) {
+        if (oldData[field] !== newData[field]) {
+          fieldsChanged.push(field);
+        }
+      }
+
+      // Mark row as edited
+      const markEditedQuery = `
+        UPDATE csv_data 
+        SET edited_by = ?, edited_at = CURRENT_TIMESTAMP, fields_changed = ?
+        WHERE id = ?
+      `;
+      executeModifyQuery(markEditedQuery, [
+        "system",
+        fieldsChanged.join("|"),
+        id,
+      ]);
 
       // Log audit entry
       logAuditEntry({

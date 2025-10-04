@@ -19,7 +19,7 @@ export async function uploadCsv(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const result = await processCsvFile(req.file.path);
+    const result = await processCsvFile(req.file.path, req.file.originalname);
 
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);

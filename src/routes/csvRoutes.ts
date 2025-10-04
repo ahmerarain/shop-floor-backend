@@ -12,6 +12,12 @@ import {
   deleteById,
 } from "../controllers/csvController";
 import { getAuditLogsEndpoint } from "../controllers/auditController";
+import {
+  exportInvalidRows,
+  exportEditedRows,
+  getInvalidRowsCount,
+  getEditedRowsCount,
+} from "../controllers/exceptionController";
 import { validateUploadedFile } from "../utils/fileValidation";
 
 const router = express.Router();
@@ -50,5 +56,11 @@ router.delete("/data/clear", clearAllData);
 
 // Get audit logs
 router.get("/audit", getAuditLogsEndpoint);
+
+// Exception exports
+router.get("/exceptions/invalid", exportInvalidRows);
+router.get("/exceptions/edited", exportEditedRows);
+router.get("/exceptions/invalid/count", getInvalidRowsCount);
+router.get("/exceptions/edited/count", getEditedRowsCount);
 
 export { router as csvRoutes };
