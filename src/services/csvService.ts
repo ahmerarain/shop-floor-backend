@@ -12,6 +12,11 @@ import {
   FIELD_MAPPING,
 } from "../utils/validation";
 import { exportErrorCsv } from "../utils/csv";
+import {
+  logAuditEntry,
+  logBulkOperation,
+  createDiffString,
+} from "./auditService";
 
 export interface ProcessedCsvResult {
   success: boolean;
@@ -103,6 +108,13 @@ export async function processCsvFile(
       ]);
 
       executeBatchInsert(insertQuery, insertData);
+
+      // Log audit entry for bulk create
+      logAuditEntry({
+        user: "system",
+        action: "CREATE",
+        diff: `Bulk created ${validRows.length} records from CSV upload`,
+      });
     }
 
     // Export error CSV if there are invalid rows
@@ -178,6 +190,16 @@ export function updateCsvData(
   data: Partial<CsvData>
 ): { success: boolean; changes: number; error?: string } {
   try {
+    // Get the current data for diff
+    const currentDataQuery = "SELECT * FROM csv_data WHERE id = ?";
+    const currentData = executeSelectQuery(currentDataQuery, [id]);
+
+    if (currentData.length === 0) {
+      return { success: false, changes: 0, error: "Record not found" };
+    }
+
+    const oldData = currentData[0];
+
     const query = `
       UPDATE csv_data 
       SET part_mark = ?, assembly_mark = ?, material = ?, thickness = ?, 
@@ -200,6 +222,23 @@ export function updateCsvData(
       id,
     ]);
 
+    if (changes > 0) {
+      // Create new data object for diff
+      const newData = {
+        ...oldData,
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Log audit entry
+      logAuditEntry({
+        user: "system",
+        action: "UPDATE",
+        row_id: parseInt(id),
+        diff: createDiffString(oldData, newData),
+      });
+    }
+
     return { success: true, changes };
   } catch (error) {
     console.error("Update error:", error);
@@ -211,6 +250,13 @@ export function updateCsvData(
 export function getAllCsvData(): CsvData[] {
   const query = "SELECT * FROM csv_data ORDER BY created_at DESC";
   return executeSelectQuery(query);
+}
+
+// Get single record by ID
+export function getCsvDataById(id: number): CsvData | null {
+  const query = "SELECT * FROM csv_data WHERE id = ?";
+  const results = executeSelectQuery(query, [id]);
+  return results.length > 0 ? results[0] : null;
 }
 
 // Delete specific records by IDs
@@ -230,6 +276,11 @@ export function deleteCsvData(ids: number[]): {
 
     const deletedCount = executeModifyQuery(query, ids);
 
+    if (deletedCount > 0) {
+      // Log bulk delete operation
+      logBulkOperation("BULK_DELETE", ids, "system");
+    }
+
     return { success: true, deletedCount };
   } catch (error) {
     console.error("Delete error:", error);
@@ -246,6 +297,9 @@ export function clearAllCsvData(): { success: boolean; error?: string } {
   try {
     const query = "DELETE FROM csv_data";
     executeModifyQuery(query);
+
+    // Log clear all operation
+    logBulkOperation("CLEAR_ALL", [], "system");
 
     return { success: true };
   } catch (error) {

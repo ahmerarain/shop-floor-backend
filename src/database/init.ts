@@ -48,6 +48,32 @@ export function initDatabase(): void {
       CREATE INDEX IF NOT EXISTS idx_assembly_mark ON csv_data(assembly_mark)
     `);
 
+    // Create audit_log table for tracking CRUD operations
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        user TEXT NOT NULL DEFAULT 'system',
+        action TEXT NOT NULL,
+        row_id INTEGER,
+        diff TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create index for audit_log performance
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp)
+    `);
+
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action)
+    `);
+
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_audit_row_id ON audit_log(row_id)
+    `);
+
     console.log("Database initialized successfully");
   } catch (error) {
     console.error("Database initialization error:", error);

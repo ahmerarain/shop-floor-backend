@@ -4,9 +4,10 @@ import multer from "multer";
 import path from "path";
 import { initDatabase, closeDatabase } from "./database/init";
 import { csvRoutes } from "./routes/csvRoutes";
+import labelRoutes from "./routes/labelRoutes";
 
 const app = express();
-const PORT = process.env.PORT || 5008;
+const PORT = process.env.PORT || 5009;
 
 // Middleware
 app.use(cors());
@@ -67,6 +68,7 @@ app.use((error: any, req: any, res: any, next: any) => {
 
 // Routes
 app.use("/api/csv", csvRoutes);
+app.use("/api/labels", labelRoutes);
 
 // Serve React app for all other routes
 app.get("*", (req, res) => {

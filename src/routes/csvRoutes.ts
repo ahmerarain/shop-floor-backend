@@ -11,6 +11,7 @@ import {
   clearAllData,
   deleteById,
 } from "../controllers/csvController";
+import { getAuditLogsEndpoint } from "../controllers/auditController";
 import { validateUploadedFile } from "../utils/fileValidation";
 
 const router = express.Router();
@@ -46,5 +47,8 @@ router.delete("/:id", deleteById);
 
 // Clear all data from database
 router.delete("/data/clear", clearAllData);
+
+// Get audit logs
+router.get("/audit", getAuditLogsEndpoint);
 
 export { router as csvRoutes };
