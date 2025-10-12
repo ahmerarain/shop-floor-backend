@@ -70,9 +70,14 @@ app.use((error: any, req: any, res: any, next: any) => {
 app.use("/api/csv", csvRoutes);
 app.use("/api/labels", labelRoutes);
 
+//helth routes
+app.get("/health", (req, res) => {
+  res.status(200).json({ message: "Server is running" });
+});
+
 // Serve React app for all other routes
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+  res.status(404).json({ error: "Route not found" });
 });
 
 const server = app.listen(PORT, () => {
