@@ -1,0 +1,83 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      # Use more flexible cache strategy since pnpm-lock.yaml might not exist yet
+      - name: Cache pnpm modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.OS }}-pnpm-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-pnpm-
+
+      - name: Build for Default Branch
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/main'
+        run: echo "Build for Default Branch"
+
+      - name: Build for Development Branch
+        if: github.ref == 'refs/heads/main'
+        run: echo "Build for Development Branch"
+
+      - name: Build for Production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Explicitly use --no-frozen-lockfile to override CI default behavior
+          pnpm install --no-frozen-lockfile
+          pnpm run build
+          # Include pnpm-lock.yaml if it exists
+          zip -r package.zip dist/ public/ package.json tsconfig.json tspaths.js
+          if [ -f "pnpm-lock.yaml" ]; then
+            zip -ur package.zip pnpm-lock.yaml
+          fi
+
+      - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: package.zip
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: package
+
+      - name: Deploy to Production AWS EC2
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          SERVER_DEV: ${{ secrets.SERVER_DEV }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH_DEV }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
+          scp -i private_key -o StrictHostKeyChecking=no package.zip ${EC2_USER}@${SERVER_DEV}:${REMOTE_PATH}/
+          ssh -i private_key -o StrictHostKeyChecking=no ${EC2_USER}@${SERVER_DEV} "unzip -o ${REMOTE_PATH}/package.zip -d ${REMOTE_PATH} && cd ${REMOTE_PATH} && pnpm install  && pm2 restart FF_DEV"
+          rm -f private_key
