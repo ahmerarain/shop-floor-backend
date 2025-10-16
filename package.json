@@ -22,17 +22,27 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "docker:clean": "docker compose down -v && docker system prune -f",
-    "seed": "node -e \"const fs = require('fs'); const path = require('path'); const csv = require('csv-parser'); const { initDatabase } = require('./dist/database/init.js'); const { executeBatchInsert } = require('./dist/utils/database.js'); initDatabase(); const samplePath = path.join(__dirname, '../sample-data/sample.csv'); if (fs.existsSync(samplePath)) { console.log('Seeding database with sample data...'); const rows = []; fs.createReadStream(samplePath).pipe(csv()).on('data', (row) => rows.push(row)).on('end', () => { const insertQuery = 'INSERT INTO csv_data (part_mark, assembly_mark, material, thickness, quantity, length, width, height, weight, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'; const insertData = rows.map(row => [row['Part Mark'], row['Assembly Mark'], row['Material'], row['Thickness'], parseInt(row['Quantity']) || 1, parseFloat(row['Length']) || null, parseFloat(row['Width']) || null, parseFloat(row['Height']) || null, parseFloat(row['Weight']) || null, row['Notes'] || null]); executeBatchInsert(insertQuery, insertData); console.log('Database seeded successfully!'); }); } else { console.log('Sample data file not found'); }\""
+    "seed": "node -e \"const fs = require('fs'); const path = require('path'); const csv = require('csv-parser'); const { initDatabase } = require('./dist/database/init.js'); const { executeBatchInsert } = require('./dist/utils/database.js'); initDatabase(); const samplePath = path.join(__dirname, '../sample-data/sample.csv'); if (fs.existsSync(samplePath)) { console.log('Seeding database with sample data...'); const rows = []; fs.createReadStream(samplePath).pipe(csv()).on('data', (row) => rows.push(row)).on('end', () => { const insertQuery = 'INSERT INTO csv_data (part_mark, assembly_mark, material, thickness, quantity, length, width, height, weight, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'; const insertData = rows.map(row => [row['Part Mark'], row['Assembly Mark'], row['Material'], row['Thickness'], parseInt(row['Quantity']) || 1, parseFloat(row['Length']) || null, parseFloat(row['Width']) || null, parseFloat(row['Height']) || null, parseFloat(row['Weight']) || null, row['Notes'] || null]); executeBatchInsert(insertQuery, insertData); console.log('Database seeded successfully!'); }); } else { console.log('Sample data file not found'); }\"",
+    "create-admin": "tsx src/scripts/createDefaultUser.ts"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^7.0.2",
+    "@types/uuid": "^10.0.0",
+    "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",
     "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
+    "dotenv": "^17.2.3",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
+    "nodemailer": "^7.0.9",
     "pdfkit": "^0.17.2",
+    "uuid": "^13.0.0",
     "zpl": "^1.0.0"
   },
   "devDependencies": {

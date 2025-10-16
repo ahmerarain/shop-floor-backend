@@ -64,6 +64,33 @@ export function initDatabase(): void {
       )
     `);
 
+    // Create users table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create password_reset_tokens table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        expires_at DATETIME NOT NULL,
+        used BOOLEAN DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `);
+
     // Create indexes for better performance (after all columns are added)
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_part_mark ON csv_data(part_mark)
@@ -97,6 +124,28 @@ export function initDatabase(): void {
 
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_last_validated ON csv_data(last_validated_at)
+    `);
+
+    // Create indexes for users table
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
+    `);
+
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active)
+    `);
+
+    // Create indexes for password_reset_tokens table
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON password_reset_tokens(token)
+    `);
+
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_reset_tokens_user_id ON password_reset_tokens(user_id)
+    `);
+
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_reset_tokens_expires_at ON password_reset_tokens(expires_at)
     `);
 
     console.log("Database initialized successfully");

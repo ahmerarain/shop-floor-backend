@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env" });
 import express from "express";
 import cors from "cors";
 import multer from "multer";
@@ -5,6 +7,8 @@ import path from "path";
 import { initDatabase, closeDatabase } from "./database/init";
 import { csvRoutes } from "./routes/csvRoutes";
 import labelRoutes from "./routes/labelRoutes";
+import { userRoutes } from "./routes/userRoutes";
+import { authRoutes } from "./routes/authRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 5004;
@@ -69,6 +73,8 @@ app.use((error: any, req: any, res: any, next: any) => {
 // Routes
 app.use("/api/csv", csvRoutes);
 app.use("/api/labels", labelRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 
 //helth routes
 app.get("/health", (req, res) => {
