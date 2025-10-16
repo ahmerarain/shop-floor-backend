@@ -19,7 +19,12 @@ export async function uploadCsv(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const result = await processCsvFile(req.file.path, req.file.originalname);
+    const userId = req.user?.userId;
+    const result = await processCsvFile(
+      req.file.path,
+      req.file.originalname,
+      userId
+    );
 
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
@@ -59,8 +64,9 @@ export function updateData(req: Request, res: Response): void {
   try {
     const { id } = req.params;
     const updateData = req.body;
+    const userId = req.user?.userId;
 
-    const result = updateCsvData(id, updateData);
+    const result = updateCsvData(id, updateData, userId);
 
     if (result.success) {
       res.json({ success: true, changes: result.changes });
@@ -137,6 +143,7 @@ export function checkErrorFile(req: Request, res: Response): void {
 export function deleteData(req: Request, res: Response): void {
   try {
     const { ids } = req.body;
+    const userId = req.user?.userId;
 
     if (!Array.isArray(ids) || ids.length === 0) {
       res
@@ -152,7 +159,7 @@ export function deleteData(req: Request, res: Response): void {
       return;
     }
 
-    const result = deleteCsvData(numericIds);
+    const result = deleteCsvData(numericIds, userId);
 
     if (result.success) {
       res.json({
@@ -174,6 +181,7 @@ export function deleteData(req: Request, res: Response): void {
 export function deleteById(req: Request, res: Response): void {
   try {
     const { id } = req.params;
+    const userId = req.user?.userId;
 
     if (!id) {
       res.status(400).json({ error: "ID is required and cannot be empty" });
@@ -186,7 +194,7 @@ export function deleteById(req: Request, res: Response): void {
       return;
     }
 
-    const result = deleteCsvData([Number(id)]);
+    const result = deleteCsvData([Number(id)], userId);
 
     if (result.success) {
       res.json({
@@ -207,7 +215,8 @@ export function deleteById(req: Request, res: Response): void {
 // Clear all data from database
 export function clearAllData(req: Request, res: Response): void {
   try {
-    const result = clearAllCsvData();
+    const userId = req.user?.userId;
+    const result = clearAllCsvData(userId);
 
     if (result.success) {
       res.json({

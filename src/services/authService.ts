@@ -218,7 +218,7 @@ export async function resetPassword(resetData: ResetPasswordRequest): Promise<{
 
     // Clean up expired tokens for this user
     const cleanupQuery =
-      'DELETE FROM password_reset_tokens WHERE user_id = ? AND expires_at <= datetime("now")';
+      "DELETE FROM password_reset_tokens WHERE user_id = ? AND expires_at <= datetime('now')";
     db.prepare(cleanupQuery).run(resetToken.user_id);
 
     return {
@@ -298,7 +298,7 @@ export function cleanupExpiredTokens(): void {
   try {
     const db = getDatabase();
     const cleanupQuery =
-      'DELETE FROM password_reset_tokens WHERE expires_at <= datetime("now")';
+      "DELETE FROM password_reset_tokens WHERE expires_at <= datetime('now')";
     const result = db.prepare(cleanupQuery).run();
     console.log(`Cleaned up ${result.changes} expired password reset tokens`);
   } catch (error) {

@@ -23,7 +23,8 @@
     "docker:logs": "docker compose logs -f",
     "docker:clean": "docker compose down -v && docker system prune -f",
     "seed": "node -e \"const fs = require('fs'); const path = require('path'); const csv = require('csv-parser'); const { initDatabase } = require('./dist/database/init.js'); const { executeBatchInsert } = require('./dist/utils/database.js'); initDatabase(); const samplePath = path.join(__dirname, '../sample-data/sample.csv'); if (fs.existsSync(samplePath)) { console.log('Seeding database with sample data...'); const rows = []; fs.createReadStream(samplePath).pipe(csv()).on('data', (row) => rows.push(row)).on('end', () => { const insertQuery = 'INSERT INTO csv_data (part_mark, assembly_mark, material, thickness, quantity, length, width, height, weight, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'; const insertData = rows.map(row => [row['Part Mark'], row['Assembly Mark'], row['Material'], row['Thickness'], parseInt(row['Quantity']) || 1, parseFloat(row['Length']) || null, parseFloat(row['Width']) || null, parseFloat(row['Height']) || null, parseFloat(row['Weight']) || null, row['Notes'] || null]); executeBatchInsert(insertQuery, insertData); console.log('Database seeded successfully!'); }); } else { console.log('Sample data file not found'); }\"",
-    "create-admin": "tsx src/scripts/createDefaultUser.ts"
+    "create-admin": "tsx src/scripts/createDefaultUser.ts",
+    "migrate-audit": "tsx src/scripts/migrateAuditTable.ts"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

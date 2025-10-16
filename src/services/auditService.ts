@@ -7,7 +7,9 @@ import {
 export interface AuditLogEntry {
   id?: number;
   timestamp?: string;
-  user: string;
+  user_id: number;
+  user_name?: string; // Populated from users table
+  user_email?: string; // Populated from users table
   action: "CREATE" | "UPDATE" | "DELETE" | "BULK_DELETE" | "CLEAR_ALL";
   row_id?: number;
   diff?: string;
@@ -25,16 +27,19 @@ export interface AuditLogResult {
  * Log an audit entry for CRUD operations
  */
 export function logAuditEntry(
-  entry: Omit<AuditLogEntry, "id" | "timestamp" | "created_at">
+  entry: Omit<
+    AuditLogEntry,
+    "id" | "timestamp" | "created_at" | "user_name" | "user_email"
+  >
 ): void {
   try {
     const query = `
-      INSERT INTO audit_log (user, action, row_id, diff)
+      INSERT INTO audit_log (user_id, action, row_id, diff)
       VALUES (?, ?, ?, ?)
     `;
 
     executeModifyQuery(query, [
-      entry.user,
+      entry.user_id,
       entry.action,
       entry.row_id || null,
       entry.diff || null,
@@ -46,7 +51,7 @@ export function logAuditEntry(
 }
 
 /**
- * Get audit log entries with pagination
+ * Get audit log entries with pagination and user information
  */
 export function getAuditLogs(
   page: number = 1,
@@ -56,17 +61,24 @@ export function getAuditLogs(
 ): AuditLogResult {
   const offset = (page - 1) * limit;
 
-  let query = "SELECT * FROM audit_log";
+  let query = `
+    SELECT 
+      al.*,
+      u.first_name || ' ' || u.last_name as user_name,
+      u.email as user_email
+    FROM audit_log al
+    LEFT JOIN users u ON al.user_id = u.id
+  `;
   let params: any[] = [];
   const conditions: string[] = [];
 
   if (action) {
-    conditions.push("action = ?");
+    conditions.push("al.action = ?");
     params.push(action);
   }
 
   if (rowId) {
-    conditions.push("row_id = ?");
+    conditions.push("al.row_id = ?");
     params.push(rowId);
   }
 
@@ -74,13 +86,13 @@ export function getAuditLogs(
     query += " WHERE " + conditions.join(" AND ");
   }
 
-  query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?";
+  query += " ORDER BY al.timestamp DESC LIMIT ? OFFSET ?";
   params.push(limit, offset);
 
   const data = executeSelectQuery(query, params);
 
   // Get total count
-  let countQuery = "SELECT COUNT(*) as total FROM audit_log";
+  let countQuery = "SELECT COUNT(*) as total FROM audit_log al";
   let countParams: any[] = [];
 
   if (conditions.length > 0) {
@@ -171,7 +183,7 @@ function normalizeValue(value: any): string | number | null {
 export function logBulkOperation(
   action: "BULK_DELETE" | "CLEAR_ALL",
   rowIds: number[],
-  user: string = "system"
+  userId: number
 ): void {
   try {
     const diff =
@@ -180,7 +192,7 @@ export function logBulkOperation(
         : "Cleared all records from database";
 
     logAuditEntry({
-      user,
+      user_id: userId,
       action,
       diff,
     });

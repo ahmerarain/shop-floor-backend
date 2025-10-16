@@ -19,43 +19,44 @@ import {
   getEditedRowsCount,
 } from "../controllers/exceptionController";
 import { validateUploadedFile } from "../utils/fileValidation";
+import { authenticateToken } from "../middleware/auth";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-// Upload and process CSV with file validation
+// Upload and process CSV with file validation (requires authentication)
 router.post(
   "/upload",
+  authenticateToken,
   upload.single("csvFile"),
   validateUploadedFile,
   uploadCsv
 );
 
-// Get all data with pagination and search
-router.get("/data", getData);
+// Get all data with pagination and search (requires authentication)
+router.get("/data", authenticateToken, getData);
 
-// Update row
-router.put("/data/:id", updateData);
+// Update row (requires authentication)
+router.put("/data/:id", authenticateToken, updateData);
 
-// Export CSV
-router.get("/export", exportCsv);
+// Export CSV (requires authentication)
+router.get("/export", authenticateToken, exportCsv);
 
-// Download error CSV
-router.get("/error", downloadErrorCsv);
+// Download error CSV (requires authentication)
+router.get("/error", authenticateToken, downloadErrorCsv);
 
-// Check if error file exists
-router.get("/error/check", checkErrorFile);
+// Check if error file exists (requires authentication)
+router.get("/error/check", authenticateToken, checkErrorFile);
 
-// Delete specific records by IDs
+// Delete specific records by IDs (requires authentication)
+router.delete("/data", authenticateToken, deleteData);
+router.delete("/:id", authenticateToken, deleteById);
 
-router.delete("/data", deleteData);
-router.delete("/:id", deleteById);
+// Clear all data from database (requires authentication)
+router.delete("/data/clear", authenticateToken, clearAllData);
 
-// Clear all data from database
-router.delete("/data/clear", clearAllData);
-
-// Get audit logs
-router.get("/audit", getAuditLogsEndpoint);
+// Get audit logs (requires authentication)
+router.get("/audit", authenticateToken, getAuditLogsEndpoint);
 
 // Exception exports
 router.get("/exceptions/invalid", exportInvalidRows);

@@ -64,7 +64,8 @@ export interface PaginatedResult {
 // Process uploaded CSV file
 export async function processCsvFile(
   filePath: string,
-  sourceFilename?: string
+  sourceFilename?: string,
+  userId?: number
 ): Promise<ProcessedCsvResult> {
   try {
     const validRows: any[] = [];
@@ -126,11 +127,13 @@ export async function processCsvFile(
       executeBatchInsert(insertQuery, insertData);
 
       // Log audit entry for bulk create
-      logAuditEntry({
-        user: "system",
-        action: "CREATE",
-        diff: `Bulk created ${validRows.length} records from CSV upload`,
-      });
+      if (userId) {
+        logAuditEntry({
+          user_id: userId,
+          action: "CREATE",
+          diff: `Bulk created ${validRows.length} records from CSV upload`,
+        });
+      }
     }
 
     // Export error CSV if there are invalid rows
@@ -203,7 +206,8 @@ export function getCsvData(
 // Update CSV data row
 export function updateCsvData(
   id: string,
-  data: Partial<CsvData>
+  data: Partial<CsvData>,
+  userId?: number
 ): { success: boolean; changes: number; error?: string } {
   try {
     // Get the current data for diff
@@ -280,12 +284,14 @@ export function updateCsvData(
       ]);
 
       // Log audit entry
-      logAuditEntry({
-        user: "system",
-        action: "UPDATE",
-        row_id: parseInt(id),
-        diff: createDiffString(oldData, newData),
-      });
+      if (userId) {
+        logAuditEntry({
+          user_id: userId,
+          action: "UPDATE",
+          row_id: parseInt(id),
+          diff: createDiffString(oldData, newData),
+        });
+      }
     }
 
     return { success: true, changes };
@@ -309,7 +315,10 @@ export function getCsvDataById(id: number): CsvData | null {
 }
 
 // Delete specific records by IDs
-export function deleteCsvData(ids: number[]): {
+export function deleteCsvData(
+  ids: number[],
+  userId?: number
+): {
   success: boolean;
   deletedCount: number;
   error?: string;
@@ -325,9 +334,9 @@ export function deleteCsvData(ids: number[]): {
 
     const deletedCount = executeModifyQuery(query, ids);
 
-    if (deletedCount > 0) {
+    if (deletedCount > 0 && userId) {
       // Log bulk delete operation
-      logBulkOperation("BULK_DELETE", ids, "system");
+      logBulkOperation("BULK_DELETE", ids, userId);
     }
 
     return { success: true, deletedCount };
@@ -342,13 +351,18 @@ export function deleteCsvData(ids: number[]): {
 }
 
 // Clear all data from database
-export function clearAllCsvData(): { success: boolean; error?: string } {
+export function clearAllCsvData(userId?: number): {
+  success: boolean;
+  error?: string;
+} {
   try {
     const query = "DELETE FROM csv_data";
     executeModifyQuery(query);
 
     // Log clear all operation
-    logBulkOperation("CLEAR_ALL", [], "system");
+    if (userId) {
+      logBulkOperation("CLEAR_ALL", [], userId);
+    }
 
     return { success: true };
   } catch (error) {
