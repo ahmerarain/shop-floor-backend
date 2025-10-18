@@ -56,7 +56,7 @@ export function initDatabase(): void {
       CREATE TABLE IF NOT EXISTS audit_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        user_id INTEGER NOT NULL,
+        user_id INTEGER,
         action TEXT NOT NULL,
         row_id INTEGER,
         diff TEXT,

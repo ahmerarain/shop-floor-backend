@@ -7,7 +7,7 @@ import {
 export interface AuditLogEntry {
   id?: number;
   timestamp?: string;
-  user_id: number;
+  user_id: number | null;
   user_name?: string; // Populated from users table
   user_email?: string; // Populated from users table
   action: "CREATE" | "UPDATE" | "DELETE" | "BULK_DELETE" | "CLEAR_ALL";

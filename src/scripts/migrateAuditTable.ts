@@ -49,7 +49,7 @@ async function migrateAuditTable() {
         CREATE TABLE audit_log_new (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-          user_id INTEGER NOT NULL,
+          user_id INTEGER,
           action TEXT NOT NULL,
           row_id INTEGER,
           diff TEXT,
