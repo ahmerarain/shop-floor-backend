@@ -73,6 +73,7 @@ export function initDatabase(): void {
         last_name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
+        role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
         is_active BOOLEAN DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP

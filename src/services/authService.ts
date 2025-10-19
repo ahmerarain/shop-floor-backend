@@ -22,7 +22,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
 const RESET_TOKEN_EXPIRES_HOURS = 1; // 1 hour
 
 // Generate JWT token
-function generateToken(userId: number, email: string): string {
+export function generateToken(userId: number, email: string): string {
   return jwt.sign({ userId, email }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
   } as SignOptions);

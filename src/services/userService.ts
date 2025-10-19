@@ -45,8 +45,8 @@ export async function createUser(userData: CreateUserRequest): Promise<{
 
     // Insert user
     const insertQuery = `
-      INSERT INTO users (first_name, last_name, email, password, is_active)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (first_name, last_name, email, password, role, is_active)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     const result = db
@@ -56,6 +56,7 @@ export async function createUser(userData: CreateUserRequest): Promise<{
         userData.last_name,
         userData.email,
         hashedPassword,
+        userData.role || "user",
         userData.is_active !== undefined ? (userData.is_active ? 1 : 0) : 1
       );
 
@@ -220,6 +221,10 @@ export function updateUser(
     if (userData.email !== undefined) {
       updateFields.push("email = ?");
       updateValues.push(userData.email);
+    }
+    if (userData.role !== undefined) {
+      updateFields.push("role = ?");
+      updateValues.push(userData.role);
     }
     if (userData.is_active !== undefined) {
       updateFields.push("is_active = ?");

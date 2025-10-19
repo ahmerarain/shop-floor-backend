@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { getAuditLogs } from "../services/auditService";
+import { getDatabase } from "../database/init";
 
 /**
  * Get audit logs with pagination and optional filtering
+ * Role-based access: admins see all logs, users see only their own
  */
 export function getAuditLogsEndpoint(req: Request, res: Response): void {
   try {
@@ -13,7 +15,21 @@ export function getAuditLogsEndpoint(req: Request, res: Response): void {
       ? parseInt(req.query.rowId as string)
       : undefined;
 
-    const result = getAuditLogs(page, limit, action, rowId);
+    // Get user information from the authenticated request
+    const userId = req.user?.userId;
+    let userRole: "user" | "admin" = "user";
+
+    if (userId) {
+      const db = getDatabase();
+      const user = db
+        .prepare("SELECT role FROM users WHERE id = ?")
+        .get(userId) as { role: string };
+      if (user) {
+        userRole = user.role as "user" | "admin";
+      }
+    }
+
+    const result = getAuditLogs(page, limit, action, rowId, userId, userRole);
 
     res.json({
       success: true,

@@ -52,12 +52,20 @@ export function logAuditEntry(
 
 /**
  * Get audit log entries with pagination and user information
+ * @param page Page number (1-based)
+ * @param limit Number of entries per page
+ * @param action Optional action filter
+ * @param rowId Optional row ID filter
+ * @param userId Optional user ID for role-based filtering
+ * @param userRole Optional user role for access control
  */
 export function getAuditLogs(
   page: number = 1,
   limit: number = 100,
   action?: string,
-  rowId?: number
+  rowId?: number,
+  userId?: number,
+  userRole?: "user" | "admin"
 ): AuditLogResult {
   const offset = (page - 1) * limit;
 
@@ -80,6 +88,12 @@ export function getAuditLogs(
   if (rowId) {
     conditions.push("al.row_id = ?");
     params.push(rowId);
+  }
+
+  // Role-based filtering: if user is not admin, only show their own audit logs
+  if (userId && userRole && userRole !== "admin") {
+    conditions.push("al.user_id = ?");
+    params.push(userId);
   }
 
   if (conditions.length > 0) {

@@ -4,6 +4,7 @@ export interface User {
   last_name: string;
   email: string;
   password?: string; // Optional for responses (excluded from API responses)
+  role: "user" | "admin";
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -14,6 +15,7 @@ export interface CreateUserRequest {
   last_name: string;
   email: string;
   password: string;
+  role?: "user" | "admin";
   is_active?: boolean;
   send_email?: boolean; // Whether to send credentials via email
 }
@@ -22,6 +24,7 @@ export interface UpdateUserRequest {
   first_name?: string;
   last_name?: string;
   email?: string;
+  role?: "user" | "admin";
   is_active?: boolean;
 }
 
@@ -30,6 +33,7 @@ export interface UserResponse {
   first_name: string;
   last_name: string;
   email: string;
+  role: "user" | "admin";
   is_active: boolean;
   created_at: string;
   updated_at: string;
